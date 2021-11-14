@@ -3,29 +3,27 @@
 // @namespace   https://github.com/epiccakeking/userscripts
 // @match       https://www.youtube.com/*
 // @grant       none
-// @version     1.1
+// @version     1.2
 // @author      epiccakeking
-// @description Inefficient likes to views percent calculator script
+// @description Calculates the ratio of likes to views
 // @run-at      document-start
 // @license     MIT
 // ==/UserScript==
-function get_likes(video_info) {
-  for (x of video_info.querySelectorAll('.ytd-toggle-button-renderer')) {
-    let label = x.getAttribute('aria-label');
-    if (label && label.includes(' likes')) return [x, Number(label.replace(' likes', '').replaceAll(',', ''))];
-  }
-}
-
-function get_views(video_info) {
-  let view_counter = video_info.querySelector('.view-count');
-  return [view_counter, Number(view_counter.innerText.replace(' views', '').replaceAll(',', ''))];
-}
-
 new MutationObserver(() => {
   let video_info = document.querySelector('.ytd-video-primary-info-renderer');
   if (!video_info) return;
-  let [like_label, likes] = get_likes(video_info);
-  let [view_label, views] = get_views(video_info);
+  let like_label, likes;
+  for (x of video_info.querySelectorAll('.ytd-toggle-button-renderer')) {
+    let label = x.getAttribute('aria-label');
+    if (label && label.endsWith(' likes')){
+      like_label=x;
+      likes=Number(label.replace(' likes', '').replaceAll(',', ''));
+      break;
+    }
+  }
+  let view_label = video_info.querySelector('.view-count');
+  if (!(like_label && view_label)) return;
+  let views = Number(view_label.innerText.replace(' views', '').replaceAll(',', ''));
   let ratio = likes / views;
   new_text = `${likes.toLocaleString()} (${ratio.toLocaleString(undefined, { style: 'percent', minimumFractionDigits: 2 })})`
   if (like_label.innerText != new_text) like_label.innerText = new_text;
